@@ -2,6 +2,7 @@
   "name": "react-title-config",
   "version": "1.0.0",
   "description": "Set document title based on current path and configuration schema",
+  "keywords": ["react", "react-component", "title", "document.title", "configuration", "json"],
   "author": "Alex Khismatulin <alexkhismatulin@gmail.com>",
   "license": "MIT",
   "repository": "https://github.com/alexkhismatulin/react-title-config",
