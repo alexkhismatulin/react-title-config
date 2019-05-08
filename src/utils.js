@@ -7,18 +7,18 @@ const matchPath = (pathname, candidate, exact) => {
   }
 
   if (typeof candidate === 'function') {
-    return matchPath(pathname, candidate(pathname));
+    return candidate(pathname);
   }
 
   if (candidate instanceof RegExp) {
     return candidate.test(pathname);
   }
 
-  throw new Error('ReactTitleConfig: path must be one of type string, function, array or RegExp!');
+  throw new Error('react-title-config: path must be one of type string, function, array or RegExp!');
 };
 
-export const match = (config) => {
-  const { pathname } = window.location;
+export const match = (config, params) => {
+  const { pathname } = params;
 
   return config.reduce((memo, descriptor) => {
     if (memo) return memo;
@@ -36,8 +36,8 @@ export const getDefaultDescriptor = (defaultTitle) => {
   return { title, default: true };
 };
 
-export const queryParamsFromUrl = () => {
-  const items = window.location.search.slice(1).split('&');
+export const queryParamsFromSearch = (search) => {
+  const items = search.slice(1).split('&');
 
   if (items.length) {
     return items.reduce((memo, item) => {
@@ -49,18 +49,16 @@ export const queryParamsFromUrl = () => {
   return {};
 };
 
-export const getTitle = (descriptor, extras) => {
+export const getTitle = (descriptor, params, extras) => {
   if (typeof descriptor.title === 'string') {
     return descriptor.title;
   }
 
   if (typeof descriptor.title === 'function') {
-    const params = {
-      queryParams: queryParamsFromUrl(),
-    };
-
+    // eslint-disable-next-line
+    params.queryParams = queryParamsFromSearch(params.search);
     return descriptor.title(params, descriptor, extras);
   }
 
-  throw new Error(`ReactTitleConfig: title for ${descriptor.path} is neither a string or a function!`);
+  throw new Error(`react-title-config: title for ${descriptor.path} is neither a string or a function!`);
 };
