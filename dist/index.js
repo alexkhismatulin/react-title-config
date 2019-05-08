@@ -18,18 +18,18 @@ var matchPath = function matchPath(pathname, candidate, exact) {
   }
 
   if (typeof candidate === 'function') {
-    return matchPath(pathname, candidate(pathname));
+    return candidate(pathname);
   }
 
   if (candidate instanceof RegExp) {
     return candidate.test(pathname);
   }
 
-  throw new Error('ReactTitleConfig: path must be one of type string, function, array or RegExp!');
+  throw new Error('react-title-config: path must be one of type string, function, array or RegExp!');
 };
 
-var match = function match(config) {
-  var pathname = window.location.pathname;
+var match = function match(config, params) {
+  var pathname = params.pathname;
 
 
   return config.reduce(function (memo, descriptor) {
@@ -50,8 +50,8 @@ var getDefaultDescriptor = function getDefaultDescriptor(defaultTitle) {
   return { title: title, default: true };
 };
 
-var queryParamsFromUrl = function queryParamsFromUrl() {
-  var items = window.location.search.slice(1).split('&');
+var queryParamsFromSearch = function queryParamsFromSearch(search) {
+  var items = search.slice(1).split('&');
 
   if (items.length) {
     return items.reduce(function (memo, item) {
@@ -67,20 +67,18 @@ var queryParamsFromUrl = function queryParamsFromUrl() {
   return {};
 };
 
-var getTitle = function getTitle(descriptor, extras) {
+var getTitle = function getTitle(descriptor, params, extras) {
   if (typeof descriptor.title === 'string') {
     return descriptor.title;
   }
 
   if (typeof descriptor.title === 'function') {
-    var params = {
-      queryParams: queryParamsFromUrl()
-    };
-
+    // eslint-disable-next-line
+    params.queryParams = queryParamsFromSearch(params.search);
     return descriptor.title(params, descriptor, extras);
   }
 
-  throw new Error('ReactTitleConfig: title for ' + descriptor.path + ' is neither a string or a function!');
+  throw new Error('react-title-config: title for ' + descriptor.path + ' is neither a string or a function!');
 };
 
 function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
@@ -91,10 +89,25 @@ var TitleConfig = function TitleConfig(props) {
       prefix = props.prefix,
       extras = _objectWithoutProperties(props, ['config', 'defaultTitle', 'prefix']);
 
-  var descriptor = match(config) || getDefaultDescriptor(defaultTitle);
+  if (!Array.isArray(config)) {
+    throw new Error('react-title-config: config is not an Array!');
+  }
+
+  var _window = window,
+      location = _window.location;
+
+
+  var params = {
+    hash: location.hash,
+    href: location.href,
+    search: location.search,
+    pathname: location.pathname
+  };
+
+  var descriptor = match(config, params) || getDefaultDescriptor(defaultTitle);
 
   if (descriptor) {
-    var title = getTitle(descriptor, extras);
+    var title = getTitle(descriptor, params, extras);
     document.title = title && !descriptor.skipPrefix && !descriptor.default ? prefix + title : title;
   }
 
